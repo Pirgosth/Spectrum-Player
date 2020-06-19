@@ -4,13 +4,14 @@
 #include <string>
 
 #include "mp3Handler.h"
+#include "visuals.h"
 
 int main(){
 
     sf::RenderWindow window(sf::VideoMode(1280, 720), "Spectrum");
     sf::Event event;
 
-    std::string path = "Resources/rampage.mp3";
+    std::string path = "Resources/leap.mp3";
 
     Mp3Handler::InitMp3();
 
@@ -27,6 +28,9 @@ int main(){
 
     sf::Sound sound;
     sound.setBuffer(buffer);
+
+    RawSpectrum rawSpectrum(sf::Vector2i((1280-800)/2, 360), sf::Vector2i(800, 0), buffer, sound, window);
+
     sound.play();
 
     while(window.isOpen()){
@@ -35,12 +39,33 @@ int main(){
                 case sf::Event::Closed:
                     window.close();
                     break;
+                case sf::Event::KeyPressed:
+                    switch(event.key.code){
+                        case sf::Keyboard::P:
+                            switch(sound.getStatus()){
+                                case sf::SoundSource::Playing:
+                                    sound.pause();
+                                    break;
+                                default:
+                                    sound.play();
+                                    break;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
                 default:
                     break;
             }
         }
 
+        rawSpectrum.Update();
+
         window.clear();
+
+        rawSpectrum.Draw();
+
         window.display();
     }
 

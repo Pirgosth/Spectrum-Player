@@ -47,26 +47,62 @@ void Slider::draw(sf::RenderTarget& target, sf::RenderStates states) const {
     target.draw(fillBar, states);
 }
 
-RawSpectrum::RawSpectrum(sf::Vector2i position, sf::Vector2i size, sf::SoundBuffer &buffer, sf::Sound &sound, sf::RenderWindow &window){
+RawSpectrum::RawSpectrum(sf::Vector2i position, sf::Vector2i size, sf::Sound &sound, sf::RenderWindow &window){
     this->position = position;
     this->size = size;
     this->window = &window;
-    this->buffer = &buffer;
     this->sound = &sound;
     vertexs.setPrimitiveType(sf::LinesStrip);
     vertexs.resize(VISUALS_MAX_SIZE);
-    for(int i(0) ; i < VISUALS_MAX_SIZE ; i++) hammingWindow.push_back(0.7-0.23*cos(2*PI*i/(float)VISUALS_MAX_SIZE)) ;
+    for(int i(0) ; i < VISUALS_MAX_SIZE ; i++) hammingWindow.push_back(0.77-0.23*cos(2*PI*i/(float)VISUALS_MAX_SIZE)) ;
 }
 
 void RawSpectrum::Update(){
-    int mark = sound->getPlayingOffset().asSeconds()*buffer->getSampleRate()*buffer->getChannelCount();
-    if(mark+VISUALS_MAX_SIZE < buffer->getSampleCount()){
+    int mark = sound->getPlayingOffset().asSeconds()*sound->getBuffer()->getSampleRate()*sound->getBuffer()->getChannelCount();
+    if(mark+VISUALS_MAX_SIZE < sound->getBuffer()->getSampleCount()){
         for(int i(mark); i<mark + VISUALS_MAX_SIZE; i++){
-            vertexs[i-mark] = sf::Vertex(sf::Vector2f(position) + sf::Vector2f((i-mark)/(float)VISUALS_MAX_SIZE*size.x, hammingWindow[i-mark]*buffer->getSamples()[i]*0.005), sf::Color(0, 255, 0, 50));
+            vertexs[i-mark] = sf::Vertex(sf::Vector2f(position) + sf::Vector2f((i-mark)/(float)VISUALS_MAX_SIZE*size.x, hammingWindow[i-mark]*sound->getBuffer()->getSamples()[i]*0.005), sf::Color(0, 255, 0, 50));
         }
     }
 }
 
-void RawSpectrum::Draw(){
-    window->draw(vertexs);
+void RawSpectrum::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+    target.draw(vertexs, states);
+}
+
+FftSpectrum::FftSpectrum(sf::Vector2f position, sf::Vector2f size, sf::Sound &sound, sf::RenderWindow &window){
+    this->position = position;
+    this->size = size;
+    this->sound = &sound;
+    this->window = &window;
+    bin.resize(VISUALS_MAX_SIZE);
+    vertexs.setPrimitiveType(sf::Lines);
+    vertexs.resize(VISUALS_MAX_SIZE);
+    for(int i(0) ; i < VISUALS_MAX_SIZE ; i++) hammingWindow.push_back(0.54-0.46*cos(2*PI*i/(float)VISUALS_MAX_SIZE)) ;
+}
+
+void FftSpectrum::Update(){
+    int mark = sound->getPlayingOffset().asSeconds()*sound->getBuffer()->getSampleRate()*sound->getBuffer()->getChannelCount();
+    if(mark+VISUALS_MAX_SIZE < sound->getBuffer()->getSampleCount()){
+        for(int i(mark); i<mark + VISUALS_MAX_SIZE; i++){
+            bin[i-mark] = Complex(sound->getBuffer()->getSamples()[i]*hammingWindow[i-mark], 0);
+        }
+    }
+
+    fft(bin);
+
+    vertexs.clear();
+
+    for(float i(3) ; i < VISUALS_MAX_SIZE/2.f ; i*=1.01)
+	{
+		sf::Vector2f samplePosition(log(i)/log(VISUALS_MAX_SIZE/2.f), std::min(size.y/2 , std::max(1.0f, 0.4f*((int)log(i)))*(float)std::abs(bin[(int)i])/VISUALS_MAX_SIZE/MAX_BARS*size.y)) ;
+		vertexs.append(sf::Vertex(position+sf::Vector2f(samplePosition.x*size.x,-samplePosition.y),sf::Color::White)) ;
+		vertexs.append(sf::Vertex(position+sf::Vector2f(samplePosition.x*size.x,0),sf::Color::White)) ;
+		vertexs.append(sf::Vertex(position+sf::Vector2f(samplePosition.x*size.x,0),sf::Color(255,255,255,100))) ;
+		vertexs.append(sf::Vertex(position+sf::Vector2f(samplePosition.x*size.x,samplePosition.y/2),sf::Color(255,255,255,0))) ;
+	}
+}
+
+void FftSpectrum::draw(sf::RenderTarget& target, sf::RenderStates states) const{
+    target.draw(vertexs, states);
 }

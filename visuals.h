@@ -8,9 +8,9 @@
 #include <vector>
 #include <math.h>
 
-#define VISUALS_MAX_SIZE 16834
+#include "utils.h"
 
-const double PI = 3.141592653589793238460 ;
+const int VISUALS_MAX_SIZE = 16834;
 
 class Slider: public sf::Drawable{
 private:
@@ -30,19 +30,34 @@ public:
     void SetScale(float minValue, float maxValue);
 };
 
-class RawSpectrum{
+class RawSpectrum: public sf::Drawable{
 private:
     sf::Vector2i size;
     sf::Vector2i position;
     sf::RenderWindow *window;
-    sf::SoundBuffer *buffer;
     sf::Sound *sound;
     sf::VertexArray vertexs;
     std::vector<float> hammingWindow;
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 public:
-    RawSpectrum(sf::Vector2i position, sf::Vector2i size, sf::SoundBuffer &buffer, sf::Sound &sound, sf::RenderWindow &window);
+    RawSpectrum(sf::Vector2i position, sf::Vector2i size, sf::Sound &sound, sf::RenderWindow &window);
     void Update();
-    void Draw();
+};
+
+class FftSpectrum: public sf::Drawable{
+private:
+    const int MAX_BARS = 7000;
+    sf::Vector2f size;
+    sf::Vector2f position;
+    sf::RenderWindow *window;
+    sf::Sound *sound;
+    std::vector<float> hammingWindow;
+    sf::VertexArray vertexs;
+    CArray bin;
+    virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
+public:
+    FftSpectrum(sf::Vector2f position, sf::Vector2f size, sf::Sound &sound, sf::RenderWindow &window);
+    void Update();
 };
 
 #endif //VISUALS_H_INCLUDED

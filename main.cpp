@@ -7,17 +7,23 @@
 #include "mp3Handler.h"
 #include "visuals.h"
 
+#include <unistd.h>
+
 void pollEvents(sf::Event &event, sf::Window &window, sf::Sound &sound);
 void onKeyPressed(sf::Event &event, sf::Sound &sound);
 
 int main(int argc, char* argv[]){
+
+    std::string programPath = argv[0];
+
+    chdir(programPath.substr(0, programPath.find_last_of('/')).c_str());
 
     Mp3Handler::InitMp3();
 
     Mp3Handler mp3Handler;
 
     sf::Font font;
-    if(!font.loadFromFile("/home/pirgosth/Programmation/C++/Spectrum Player/Resources/square_rough.ttf")){
+    if(!font.loadFromFile("Resources/square_rough.ttf")){
         std::cerr << "Could not load font" << std::endl;
         return -1;
     }
@@ -47,7 +53,8 @@ int main(int argc, char* argv[]){
 
     Slider playerSlider(sf::Vector2f((1280-800)/2, (720-22)/2+220), sf::Vector2f(800, 22), sf::Color(255, 255, 255, 180), sf::Color(255, 140, 0, 200), -3);
     playerSlider.SetScale(0, buffer.getDuration().asMilliseconds());
-    RawSpectrum rawSpectrum(sf::Vector2i((1280-1000)/2, 360-30), sf::Vector2i(1000, 0), buffer, sound, window);
+    // RawSpectrum rawSpectrum(sf::Vector2i((1280-1000)/2, 360-30), sf::Vector2i(1000, 0), sound, window);
+    FftSpectrum fftSpectrum(sf::Vector2f((1280-900)/2, (720)/2 + 50), sf::Vector2f(800, 400), sound, window);
 
     sf::Text songNameText(getFileName(path), font);
     songNameText.setPosition((window.getSize().x - songNameText.getGlobalBounds().width)/2 , 65);
@@ -57,6 +64,7 @@ int main(int argc, char* argv[]){
     sf::Text songPlayingOffsetText(getFormatedTime(0), font);
     songPlayingOffsetText.setPosition(playerSlider.GetPosition().x - songPlayingOffsetText.getGlobalBounds().width - 15, playerSlider.GetPosition().y + (playerSlider.GetSize().y-songPlayingOffsetText.getGlobalBounds().height)/2 -5);
 
+    
 
     sound.play();
 
@@ -65,14 +73,18 @@ int main(int argc, char* argv[]){
             pollEvents(event, window, sound);
         }
 
-        playerSlider.SetValue(sound.getPlayingOffset().asMilliseconds());
-        songPlayingOffsetText.setString(getFormatedTime(sound.getPlayingOffset().asSeconds()));
-        rawSpectrum.Update();
+        if(true){//if(sound.getStatus() == sf::SoundSource::Playing){ //TODO Check if elements refresh when song ends.
+            playerSlider.SetValue(sound.getPlayingOffset().asMilliseconds());
+            songPlayingOffsetText.setString(getFormatedTime(sound.getPlayingOffset().asSeconds()));
+            // rawSpectrum.Update();
+            fftSpectrum.Update();
+        }
 
         window.clear();
 
         window.draw(playerSlider);
-        rawSpectrum.Draw();
+        // window.draw(rawSpectrum);
+        window.draw(fftSpectrum);
 
         window.draw(songDurationText);
         window.draw(songPlayingOffsetText);

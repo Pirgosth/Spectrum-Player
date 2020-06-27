@@ -6,6 +6,16 @@
 #include <complex>
 #include <valarray>
 
+#ifdef _WIN32
+
+#define PATH_SEP '\\'
+
+#else
+
+#define PATH_SEP '/'
+
+#endif // _WIN32
+
 const double PI = 3.141592653589793238460;
 
 typedef std::complex<double> Complex;

@@ -48,10 +48,8 @@ void Mp3Handler::QueryData(){
 
     mpg123_getformat(handle, &sampleRate, &channelCount, nullptr);
 
-    data = {
-        .channelCount = channelCount,
-        .sampleRate = sampleRate,
-    };
+    data.channelCount = channelCount;
+    data.sampleRate = sampleRate;
 }
 
 void Mp3Handler::DecodeBuffer(){

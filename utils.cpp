@@ -10,7 +10,7 @@ std::string getFormatedTime(int timeInSeconds){
 }
 
 std::string getFileName(std::string path){
-    int lastSlashIndex = path.find_last_of('/');
+    int lastSlashIndex = path.find_last_of(PATH_SEP);
     int pointIndex = path.find_last_of('.');
     return path.substr(lastSlashIndex + 1, pointIndex-1-lastSlashIndex);
 }

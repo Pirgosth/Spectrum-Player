@@ -7,16 +7,25 @@
 #include "mp3Handler.h"
 #include "visuals.h"
 
-#include <unistd.h>
+#ifdef _WIN32
+#include <direct.h>
+#include <Windows.h>
+#define cwd _getcwd
+#define cd _chdir
+#else
+#include "unistd.h"
+#define cwd getcwd
+#define cd chdir
+#endif
 
 void pollEvents(sf::Event &event, sf::Window &window, sf::Sound &sound);
 void onKeyPressed(sf::Event &event, sf::Sound &sound);
 
 int main(int argc, char* argv[]){
-
     std::string programPath = argv[0];
+    std::string workingDir = programPath.substr(0, programPath.find_last_of(PATH_SEP)).c_str();
 
-    chdir(programPath.substr(0, programPath.find_last_of('/')).c_str());
+    cd(workingDir.c_str());
 
     Mp3Handler::InitMp3();
 
@@ -24,14 +33,18 @@ int main(int argc, char* argv[]){
 
     sf::Font font;
     if(!font.loadFromFile("Resources/square_rough.ttf")){
-        std::cerr << "Could not load font" << std::endl;
+        std::cerr << "Could not load font: \"Resources/square_rough.ttf\"" << std::endl;
         return -1;
     }
 
     std::string path;
 
     if(argc >= 2){
+#ifdef _WIN32
+        FreeConsole();
+#endif //_WIN32
         path = argv[1];
+        std::cout << path << std::endl;
     }
     else{
         std::cout << "Enter file path: ";

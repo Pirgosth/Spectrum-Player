@@ -15,5 +15,7 @@ Spectrum
 *.dll
 *.exe
 *.mp3
+*.wav
 *.zip
 *.bat
+*.py

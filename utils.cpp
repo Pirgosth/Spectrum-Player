@@ -1,5 +1,13 @@
 #include "utils.h"
 
+std::string tolower_str(std::string str){
+	std::string result(str);
+	for(int i(0); i<result.length(); i++){
+		result[i] = tolower(result[i]);
+	}
+	return result;
+}
+
 std::string getFormatedTime(int timeInSeconds){
     int hours = timeInSeconds/3600;
     timeInSeconds %= 3600;
@@ -13,6 +21,11 @@ std::string getFileName(std::string path){
     int lastSlashIndex = path.find_last_of(PATH_SEP);
     int pointIndex = path.find_last_of('.');
     return path.substr(lastSlashIndex + 1, pointIndex-1-lastSlashIndex);
+}
+
+std::string getFileExtension(std::string path){
+	int pointIndex = path.find_last_of(".");
+	return path.substr(pointIndex+1, path.length() - (pointIndex+1));
 }
 
 void fft(CArray &bin)

@@ -52,12 +52,18 @@ int main(int argc, char* argv[]){
     }
 
     sf::SoundBuffer buffer;
-
-    if(!mp3Handler.LoadFromFile(path, buffer)){
-        std::cerr << "Could not load file: " << path << std::endl;
-        return -1;
+    if(tolower_str(getFileExtension(path)) == "mp3"){
+        if(!mp3Handler.LoadFromFile(path, buffer)){
+            std::cerr << "Could not load file: " << path << std::endl;
+            return -1;
+        }
     }
-
+    else{
+        if(!buffer.loadFromFile(path)){
+            std::cerr << "Could not load file: " << path << std::endl;
+            return -1;
+        }
+    }
     sf::Sound sound;
     sound.setBuffer(buffer);
 

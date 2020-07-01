@@ -41,7 +41,7 @@ int main(int argc, char* argv[]){
 
     if(argc >= 2){
 #ifdef _WIN32
-        FreeConsole();
+        //FreeConsole();
 #endif //_WIN32
         path = argv[1];
         std::cout << path << std::endl;
@@ -67,7 +67,7 @@ int main(int argc, char* argv[]){
     Slider playerSlider(sf::Vector2f((1280-800)/2, (720-22)/2+220), sf::Vector2f(800, 22), sf::Color(255, 255, 255, 180), sf::Color(255, 140, 0, 200), -3);
     playerSlider.SetScale(0, buffer.getDuration().asMilliseconds());
     // RawSpectrum rawSpectrum(sf::Vector2i((1280-1000)/2, 360-30), sf::Vector2i(1000, 0), sound, window);
-    FftSpectrum fftSpectrum(sf::Vector2f((1280-900)/2, (720)/2 + 50), sf::Vector2f(800, 400), sound, window);
+    FftSpectrum fftSpectrum(sf::Vector2f((1280-800)/2, (720)/2 + 50), sf::Vector2f(800, 400), sound, window);
 
     sf::Text songNameText(getFileName(path), font);
     songNameText.setPosition((window.getSize().x - songNameText.getGlobalBounds().width)/2 , 65);

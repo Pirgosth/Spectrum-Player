@@ -1,10 +1,12 @@
 #ifndef UTILS_H_INCLUDED
 #define UTILS_H_INCLUDED
 
-#include <string>
-#include <cmath>
 #include <complex>
 #include <valarray>
+#include <math.h>
+
+// #include <cstring>
+#include <string>
 
 #ifdef _WIN32
 

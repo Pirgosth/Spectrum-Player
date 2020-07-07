@@ -53,15 +53,15 @@ RawSpectrum::RawSpectrum(sf::Vector2i position, sf::Vector2i size, sf::Sound &so
     this->window = &window;
     this->sound = &sound;
     vertexs.setPrimitiveType(sf::LinesStrip);
-    vertexs.resize(VISUALS_MAX_SIZE);
-    for(int i(0) ; i < VISUALS_MAX_SIZE ; i++) hammingWindow.push_back(0.77-0.23*cos(2*PI*i/(float)VISUALS_MAX_SIZE)) ;
+    vertexs.resize(BUFFER_SIZE);
+    for(int i(0) ; i < BUFFER_SIZE ; i++) hammingWindow.push_back(0.77-0.23*cos(2*PI*i/(float)BUFFER_SIZE)) ;
 }
 
 void RawSpectrum::Update(){
     int mark = sound->getPlayingOffset().asSeconds()*sound->getBuffer()->getSampleRate()*sound->getBuffer()->getChannelCount();
-    if(mark+VISUALS_MAX_SIZE < sound->getBuffer()->getSampleCount()){
-        for(int i(mark); i<mark + VISUALS_MAX_SIZE; i++){
-            vertexs[i-mark] = sf::Vertex(sf::Vector2f(position) + sf::Vector2f((i-mark)/(float)VISUALS_MAX_SIZE*size.x, hammingWindow[i-mark]*sound->getBuffer()->getSamples()[i]*0.005), sf::Color(0, 255, 0, 50));
+    if(mark+BUFFER_SIZE < sound->getBuffer()->getSampleCount()){
+        for(int i(mark); i<mark + BUFFER_SIZE; i++){
+            vertexs[i-mark] = sf::Vertex(sf::Vector2f(position) + sf::Vector2f((i-mark)/(float)BUFFER_SIZE*size.x, hammingWindow[i-mark]*sound->getBuffer()->getSamples()[i]*0.005), sf::Color(0, 255, 0, 50));
         }
     }
 }
@@ -70,37 +70,46 @@ void RawSpectrum::draw(sf::RenderTarget& target, sf::RenderStates states) const 
     target.draw(vertexs, states);
 }
 
-FftSpectrum::FftSpectrum(sf::Vector2f position, sf::Vector2f size, sf::Sound &sound, sf::RenderWindow &window){
+FftSpectrum::FftSpectrum(sf::Vector2f position, sf::Vector2f size, sf::Sound &sound): d(exp(log(BUFFER_SIZE/6)/size.x)){
+    // std::cout << "Dilatation coefficient: " << d << std::endl;
     this->position = position;
     this->size = size;
+
     this->sound = &sound;
-    this->window = &window;
-    bin.resize(VISUALS_MAX_SIZE);
+    this->buffer = sound.getBuffer();
+
+    sampleCount = buffer->getSampleCount();
+    sampleRate = buffer->getSampleRate()*buffer->getChannelCount();
+    bufferSize = BUFFER_SIZE < sampleCount ? BUFFER_SIZE : sampleCount;
+    
+    samples.resize(bufferSize);
     vertexs.setPrimitiveType(sf::Lines);
-    vertexs.resize(VISUALS_MAX_SIZE);
-    for(int i(0) ; i < VISUALS_MAX_SIZE ; i++) hammingWindow.push_back(0.54-0.46*cos(2*PI*i/(float)VISUALS_MAX_SIZE)) ;
+    vertexs.resize(bufferSize);
+    
+    for(int i(0) ; i < bufferSize ; i++) hammingWindow.push_back(0.54-0.46*cos(2*PI*i/(float)bufferSize)) ;
 }
 
 void FftSpectrum::Update(){
-    int mark = sound->getPlayingOffset().asSeconds()*sound->getBuffer()->getSampleRate()*sound->getBuffer()->getChannelCount();
-    if(mark+VISUALS_MAX_SIZE < sound->getBuffer()->getSampleCount()){
-        for(int i(mark); i<mark + VISUALS_MAX_SIZE; i++){
-            bin[i-mark] = Complex((float)sound->getBuffer()->getSamples()[i]*hammingWindow[i-mark], 0);
+    int mark = sound->getPlayingOffset().asSeconds()*sampleRate;
+    if(mark + bufferSize < sampleCount){
+        for(int i(mark); i<bufferSize + mark; i++){
+            samples[i-mark] = Complex(buffer->getSamples()[i]*hammingWindow[i-mark], 0);
         }
     }
 
+    bin = CArray(samples.data(), bufferSize);
     fft(bin);
 
     vertexs.clear();
 
-    for(float i(3) ; i < VISUALS_MAX_SIZE/2.f ; i*=1.01)
+    for(float i(3) ; i < bufferSize/2.f ; i*=d)
 	{
-		sf::Vector2f samplePosition(log(i/3)/log(VISUALS_MAX_SIZE/6.f), std::min(size.y/2 , std::max(1.0f, 0.4f*((int)log(i)))*(float)std::abs(bin[(int)i])/VISUALS_MAX_SIZE/MAX_BARS*size.y)) ;
-        //std::cout << (int)(samplePosition.x*size.x) << std::endl;
-        vertexs.append(sf::Vertex(position+sf::Vector2f((int)(samplePosition.x*size.x),(int)(-samplePosition.y)),sf::Color::White)) ;
-		vertexs.append(sf::Vertex(position+sf::Vector2f((int)(samplePosition.x * size.x),0),sf::Color::White)) ;
-		vertexs.append(sf::Vertex(position+sf::Vector2f((int)(samplePosition.x * size.x),0),sf::Color(255,255,255,100))) ;
-		vertexs.append(sf::Vertex(position+sf::Vector2f((int)(samplePosition.x * size.x),(int)(samplePosition.y/2)),sf::Color(255,255,255,0))) ;
+		sf::Vector2f samplePosition(log(i/3)/log(bufferSize/6.f)*size.x, std::min(size.y/2, (float)std::abs(bin[(int)i])/MAX_BARS*size.y));
+        samplePosition.x += position.x;
+        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x),(int)(position.y-samplePosition.y)),sf::Color::White)) ;
+		vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)position.y),sf::Color::White)) ;
+		vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)position.y),sf::Color(255, 255, 255,100))) ;
+		vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x),(int)(position.y + samplePosition.y/2)),sf::Color(255, 255, 255, 0))) ;
 	}
 }
 

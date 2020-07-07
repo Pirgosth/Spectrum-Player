@@ -7,10 +7,11 @@
 #include <iostream>
 #include <vector>
 #include <math.h>
+#include <cstring>
 
 #include "utils.h"
 
-const int VISUALS_MAX_SIZE = 16834;
+#define BUFFER_SIZE 16384
 
 class Slider: public sf::Drawable{
 private:
@@ -46,17 +47,28 @@ public:
 
 class FftSpectrum: public sf::Drawable{
 private:
-    const int MAX_BARS = 7000;
+    const int MAX_BARS = 100000000;
+    const float d;
+
     sf::Vector2f size;
     sf::Vector2f position;
-    sf::RenderWindow *window;
-    sf::Sound *sound;
-    std::vector<float> hammingWindow;
     sf::VertexArray vertexs;
+
+    const sf::SoundBuffer* buffer;
+    sf::Sound* sound;
+    
+    std::vector<Complex> samples;
     CArray bin;
+
+    int sampleCount;
+    int sampleRate;
+    int bufferSize;
+
+    std::vector<float> hammingWindow;
+
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 public:
-    FftSpectrum(sf::Vector2f position, sf::Vector2f size, sf::Sound &sound, sf::RenderWindow &window);
+    FftSpectrum(sf::Vector2f position, sf::Vector2f size, sf::Sound &sound);
     void Update();
 };
 

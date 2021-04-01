@@ -19,3 +19,8 @@ Spectrum
 *.zip
 *.bat
 *.py
+
+Temp Files
+
+obj
+target

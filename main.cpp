@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "mp3Handler.h"
 #include "visuals.h"
+#include "mp3AudioStream.hpp"
 
 #ifdef _WIN32
 #include <direct.h>
@@ -18,8 +19,8 @@
 #define cd chdir
 #endif
 
-void pollEvents(sf::Event &event, sf::Window &window, sf::Sound &sound);
-void onKeyPressed(sf::Event &event, sf::Sound &sound);
+void pollEvents(sf::Event &event, sf::Window &window, mp3AudioStream &stream);
+void onKeyPressed(sf::Event &event, mp3AudioStream &stream);
 
 int main(int argc, char* argv[]){
     std::string programPath = argv[0];
@@ -51,55 +52,59 @@ int main(int argc, char* argv[]){
         std::cin >> path;
     }
 
-    sf::SoundBuffer buffer;
-    if(tolower_str(getFileExtension(path)) == "mp3"){
-        if(!mp3Handler.LoadFromFile(path, buffer)){
-            std::cerr << "Could not load file: " << path << std::endl;
-            return -1;
-        }
-    }
-    else{
-        if(!buffer.loadFromFile(path)){
-            std::cerr << "Could not load file: " << path << std::endl;
-            return -1;
-        }
-    }
-    sf::Sound sound;
-    sound.setBuffer(buffer);
+    mp3AudioStream mp3Music(path);
+
+    std::cout << "Total duration of track: " << mp3Music.getDuration().asSeconds() << " seconds" << std::endl;
+
+    // sf::SoundBuffer buffer;
+    // if(tolower_str(getFileExtension(path)) == "mp3"){
+    //     if(!mp3Handler.LoadFromFile(path, buffer)){
+    //         std::cerr << "Could not load file: " << path << std::endl;
+    //         return -1;
+    //     }
+    // }
+    // else{
+    //     if(!buffer.loadFromFile(path)){
+    //         std::cerr << "Could not load file: " << path << std::endl;
+    //         return -1;
+    //     }
+    // }
+    // sf::Sound sound;
+    // sound.setBuffer(buffer);
 
     sf::RenderWindow window(sf::VideoMode(1280, 720), "Spectrum Player");
     sf::Event event;
 
     Slider playerSlider(sf::Vector2f((1280-800)/2, (720-18)/2+220), sf::Vector2f(800, 18), sf::Color(255, 255, 255, 180), sf::Color(45, 245, 15), -3);
-    playerSlider.SetScale(0, buffer.getDuration().asMilliseconds());
+    playerSlider.SetScale(0, mp3Music.getDuration().asMilliseconds());
     // RawSpectrum rawSpectrum(sf::Vector2i((1280-1000)/2, 360-30), sf::Vector2i(1000, 0), sound, window);
-    FftSpectrum fftSpectrum(sf::Vector2f((int)((1280-1000)/2), (int)((720)/2 + 50)), sf::Vector2f(1000, 400), sound);
+    // FftSpectrum fftSpectrum(sf::Vector2f((int)((1280-1000)/2), (int)((720)/2 + 50)), sf::Vector2f(1000, 400), sound);
 
     sf::Text songNameText(getFileName(path), font);
     songNameText.setPosition((window.getSize().x - songNameText.getGlobalBounds().width)/2 , 65);
 
-    sf::Text songDurationText(getFormatedTime(buffer.getDuration().asSeconds()), font);
+    sf::Text songDurationText(getFormatedTime(mp3Music.getDuration().asSeconds()), font);
     songDurationText.setPosition(playerSlider.GetPosition().x + playerSlider.GetSize().x + 15, playerSlider.GetPosition().y + (playerSlider.GetSize().y-songDurationText.getGlobalBounds().height)/2 -5);
     sf::Text songPlayingOffsetText(getFormatedTime(0), font);
     songPlayingOffsetText.setPosition(playerSlider.GetPosition().x - songPlayingOffsetText.getGlobalBounds().width - 15, playerSlider.GetPosition().y + (playerSlider.GetSize().y-songPlayingOffsetText.getGlobalBounds().height)/2 -5);
 
-    sound.play();
+    mp3Music.play();
 
     while(window.isOpen()){
         while(window.pollEvent(event)){
-            pollEvents(event, window, sound);
+            pollEvents(event, window, mp3Music);
         }
 
-        playerSlider.SetValue(sound.getPlayingOffset().asMilliseconds());
-        songPlayingOffsetText.setString(getFormatedTime(sound.getPlayingOffset().asSeconds()));
+        playerSlider.SetValue(mp3Music.getPlayingOffset().asMilliseconds());
+        songPlayingOffsetText.setString(getFormatedTime(mp3Music.getPlayingOffset().asSeconds()));
         // rawSpectrum.Update();
-        fftSpectrum.Update();
+        // fftSpectrum.Update();
 
         window.clear();
 
         window.draw(playerSlider);
         // window.draw(rawSpectrum);
-        window.draw(fftSpectrum);
+        // window.draw(fftSpectrum);
 
         window.draw(songDurationText);
         window.draw(songPlayingOffsetText);
@@ -111,39 +116,39 @@ int main(int argc, char* argv[]){
     return 0;
 }
 
-void pollEvents(sf::Event &event, sf::Window &window, sf::Sound &sound){
+void pollEvents(sf::Event &event, sf::Window &window, mp3AudioStream &stream){
     switch(event.type){
         case sf::Event::Closed:
             window.close();
             break;
         case sf::Event::KeyPressed:
-            onKeyPressed(event, sound);
+            onKeyPressed(event, stream);
             break;
         default:
             break;
     }
 }
 
-void onKeyPressed(sf::Event &event, sf::Sound &sound){
+void onKeyPressed(sf::Event &event, mp3AudioStream &stream){
     switch(event.key.code){
         case sf::Keyboard::P:
-            switch(sound.getStatus()){
+            switch(stream.getStatus()){
                 case sf::SoundSource::Playing:
-                    sound.pause();
+                    stream.pause();
                     break;
                 default:
-                    sound.play();
+                    stream.play();
                     break;
             }
             break;
         case sf::Keyboard::S:
-            sound.stop();
+            stream.stop();
             break;
         case sf::Keyboard::Left:
-            sound.setPlayingOffset(sf::seconds(std::max(sound.getPlayingOffset().asSeconds() - 5, 0.0f)));
+            stream.setPlayingOffset(sf::seconds(std::max(stream.getPlayingOffset().asSeconds() - 5, 0.0f)));
             break;
         case sf::Keyboard::Right:
-            sound.setPlayingOffset(sf::seconds(std::min(sound.getPlayingOffset().asSeconds() + 5, sound.getBuffer()->getDuration().asSeconds())));
+            stream.setPlayingOffset(sf::seconds(std::min(stream.getPlayingOffset().asSeconds() + 5, stream.getDuration().asSeconds())));
             break;
         default:
             break;

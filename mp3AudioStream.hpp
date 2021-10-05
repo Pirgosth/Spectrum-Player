@@ -5,6 +5,15 @@
 #include <string>
 #include <SFML/Audio.hpp>
 #include <mpg123.h>
+#include <algorithm>
+
+#define BUFFER_MULTIPLIER 4
+
+struct BufferDescriptor{
+    sf::Int16* buffer = nullptr;
+    size_t bufferSize = 0;
+};
+typedef struct BufferDescriptor BufferDescriptor;
 
 class mp3AudioStream: public sf::SoundStream
 {
@@ -17,13 +26,17 @@ private:
     int channels = 0;
     int encoding = 0;
     long totalSampleCount = 0;
-    size_t decodedBufferSize = 0;
+    size_t maximumBufferSize = 0;
+    BufferDescriptor bufferDescriptors[BUFFER_MULTIPLIER];
     mpg123_handle *mh = nullptr;
+    void reloadFirstBuffers();
+    void shiftBuffers();
 public:
     mp3AudioStream(std::string filePath);
     virtual ~mp3AudioStream();
     void clearMemory();
     sf::Time getDuration();
+    BufferDescriptor getCurrentBufferDescriptor();
 };
 
 

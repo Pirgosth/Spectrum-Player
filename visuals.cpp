@@ -1,6 +1,7 @@
 #include "visuals.h"
 
-Slider::Slider(sf::Vector2f position, sf::Vector2f size, sf::Color outlineColor, sf::Color fillColor, float thickness){
+Slider::Slider(sf::Vector2f position, sf::Vector2f size, sf::Color outlineColor, sf::Color fillColor, float thickness)
+{
     outlineBar.setFillColor(sf::Color::Transparent);
     outlineBar.setOutlineColor(outlineColor);
     outlineBar.setOutlineThickness(thickness);
@@ -10,109 +11,134 @@ Slider::Slider(sf::Vector2f position, sf::Vector2f size, sf::Color outlineColor,
     SetSize(size);
 }
 
-void Slider::SetPosition(sf::Vector2f position){
+void Slider::SetPosition(sf::Vector2f position)
+{
     outlineBar.setPosition(position);
     fillBar.setPosition(position - sf::Vector2f(outlineBar.getOutlineThickness(), outlineBar.getOutlineThickness()));
 }
 
-sf::Vector2f Slider::GetPosition(){
+sf::Vector2f Slider::GetPosition()
+{
     return outlineBar.getPosition();
 }
 
-void Slider::SetSize(sf::Vector2f size){
+void Slider::SetSize(sf::Vector2f size)
+{
     outlineBar.setSize(size);
-    sf::Vector2f fillSize(fillBar.getSize().x, size.y + 2*outlineBar.getOutlineThickness());
+    sf::Vector2f fillSize(fillBar.getSize().x, size.y + 2 * outlineBar.getOutlineThickness());
     fillBar.setSize(fillSize);
 }
 
-sf::Vector2f Slider::GetSize(){
+sf::Vector2f Slider::GetSize()
+{
     return outlineBar.getSize();
 }
 
-void Slider::SetValue(float value){
+void Slider::SetValue(float value)
+{
     currentValue = std::max(minValue, value);
     currentValue = std::min(maxValue, value);
     sf::Vector2f fillSize = fillBar.getSize();
-    fillSize.x = (currentValue - minValue)/(maxValue-minValue)*(outlineBar.getSize().x+2*outlineBar.getOutlineThickness());
+    fillSize.x = (currentValue - minValue) / (maxValue - minValue) * (outlineBar.getSize().x + 2 * outlineBar.getOutlineThickness());
     fillBar.setSize(fillSize);
 }
 
-void Slider::SetScale(float minValue, float maxValue){
+void Slider::SetScale(float minValue, float maxValue)
+{
     this->minValue = minValue;
     this->maxValue = maxValue;
 }
 
-void Slider::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+void Slider::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
     target.draw(outlineBar, states);
     target.draw(fillBar, states);
 }
 
-RawSpectrum::RawSpectrum(sf::Vector2i position, sf::Vector2i size, sf::Sound &sound, sf::RenderWindow &window){
+RawSpectrum::RawSpectrum(sf::Vector2i position, sf::Vector2i size, sf::Sound &sound, sf::RenderWindow &window)
+{
     this->position = position;
     this->size = size;
     this->window = &window;
     this->sound = &sound;
     vertexs.setPrimitiveType(sf::LinesStrip);
     vertexs.resize(BUFFER_SIZE);
-    for(int i(0) ; i < BUFFER_SIZE ; i++) hammingWindow.push_back(0.77-0.23*cos(2*PI*i/(float)BUFFER_SIZE)) ;
+    for (int i(0); i < BUFFER_SIZE; i++)
+        hammingWindow.push_back(0.77 - 0.23 * cos(2 * PI * i / (float)BUFFER_SIZE));
 }
 
-void RawSpectrum::Update(){
-    int mark = sound->getPlayingOffset().asSeconds()*sound->getBuffer()->getSampleRate()*sound->getBuffer()->getChannelCount();
-    if(mark+BUFFER_SIZE < sound->getBuffer()->getSampleCount()){
-        for(int i(mark); i<mark + BUFFER_SIZE; i++){
-            vertexs[i-mark] = sf::Vertex(sf::Vector2f(position) + sf::Vector2f((i-mark)/(float)BUFFER_SIZE*size.x, hammingWindow[i-mark]*sound->getBuffer()->getSamples()[i]*0.005), sf::Color(0, 255, 0, 50));
+void RawSpectrum::Update()
+{
+    int mark = sound->getPlayingOffset().asSeconds() * sound->getBuffer()->getSampleRate() * sound->getBuffer()->getChannelCount();
+    if (mark + BUFFER_SIZE < sound->getBuffer()->getSampleCount())
+    {
+        for (int i(mark); i < mark + BUFFER_SIZE; i++)
+        {
+            vertexs[i - mark] = sf::Vertex(sf::Vector2f(position) + sf::Vector2f((i - mark) / (float)BUFFER_SIZE * size.x, hammingWindow[i - mark] * sound->getBuffer()->getSamples()[i] * 0.005), sf::Color(0, 255, 0, 50));
         }
     }
 }
 
-void RawSpectrum::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+void RawSpectrum::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
     target.draw(vertexs, states);
 }
 
-FftSpectrum::FftSpectrum(sf::Vector2f position, sf::Vector2f size, sf::Sound &sound): d(exp(log(BUFFER_SIZE/6)/size.x)){
+FftSpectrum::FftSpectrum(sf::Vector2f position, sf::Vector2f size, mp3AudioStream &sound) : d(exp(log(BUFFER_SIZE / 6) / size.x))
+{
     // std::cout << "Dilatation coefficient: " << d << std::endl;
     this->position = position;
     this->size = size;
 
     this->sound = &sound;
-    this->buffer = sound.getBuffer();
 
-    sampleCount = buffer->getSampleCount();
-    sampleRate = buffer->getSampleRate()*buffer->getChannelCount();
-    bufferSize = BUFFER_SIZE < sampleCount ? BUFFER_SIZE : sampleCount;
-    
-    samples.resize(bufferSize);
     vertexs.setPrimitiveType(sf::Lines);
-    vertexs.resize(bufferSize);
-    
-    for(int i(0) ; i < bufferSize ; i++) hammingWindow.push_back(0.54-0.46*cos(2*PI*i/(float)bufferSize)) ;
+
+    sampleRate = sound.getSampleRate();
 }
 
-void FftSpectrum::Update(){
-    int mark = sound->getPlayingOffset().asSeconds()*sampleRate;
-    if(mark + bufferSize < sampleCount){
-        for(int i(mark); i<bufferSize + mark; i++){
-            samples[i-mark] = Complex(buffer->getSamples()[i]*hammingWindow[i-mark], 0);
-        }
+void FftSpectrum::Update()
+{
+    BufferDescriptor currentBufferDescriptor = sound->getCurrentBufferDescriptor();
+
+    sf::Int16 *buffer = currentBufferDescriptor.buffer;
+    sampleCount = currentBufferDescriptor.bufferSize;
+    bufferSize = BUFFER_SIZE < sampleCount ? BUFFER_SIZE : sampleCount;
+    if (sampleCount <= 0 || buffer == nullptr)
+    {
+        std::cout << "No samples in current buffer" << std::endl;
+        return;
     }
+    samples.resize(bufferSize);
+    vertexs.resize(bufferSize);
+    std::vector<float> hammingWindow;
+    for (int i(0); i < bufferSize; i++)
+        hammingWindow.push_back(0.54 - 0.46 * cos(2 * PI * i / (float)bufferSize));
+
+    for (int i(0); i < bufferSize; i++)
+    {
+        samples[i] = Complex(buffer[i] * hammingWindow[i], 0);
+    }
+    
+    delete[] buffer;
 
     bin = CArray(samples.data(), bufferSize);
     fft(bin);
 
     vertexs.clear();
 
-    for(float i(3) ; i < bufferSize/2.f ; i*=d)
-	{
-		sf::Vector2f samplePosition(log(i/3)/log(bufferSize/6.f)*size.x, std::min(size.y/2, (float)std::abs(bin[(int)i])/MAX_BARS*size.y));
+    for (float i(3); i < bufferSize / 2.f; i *= d)
+    {
+        sf::Vector2f samplePosition(log(i / 3) / log(bufferSize / 6.f) * size.x, std::min(size.y / 2, (float)std::abs(bin[(int)i]) / MAX_BARS * size.y));
         samplePosition.x += position.x;
-        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x),(int)(position.y-samplePosition.y)),sf::Color::White)) ;
-		vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)position.y),sf::Color::White)) ;
-		vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)position.y),sf::Color(255, 255, 255,100))) ;
-		vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x),(int)(position.y + samplePosition.y/2)),sf::Color(255, 255, 255, 0))) ;
-	}
+        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)(position.y - samplePosition.y)), sf::Color::White));
+        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)position.y), sf::Color::White));
+        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)position.y), sf::Color(255, 255, 255, 100)));
+        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)(position.y + samplePosition.y / 2)), sf::Color(255, 255, 255, 0)));
+    }
 }
 
-void FftSpectrum::draw(sf::RenderTarget& target, sf::RenderStates states) const{
+void FftSpectrum::draw(sf::RenderTarget &target, sf::RenderStates states) const
+{
     target.draw(vertexs, states);
 }

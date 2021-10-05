@@ -9,9 +9,10 @@
 #include <math.h>
 #include <cstring>
 
+#include "mp3AudioStream.hpp"
 #include "utils.h"
 
-#define BUFFER_SIZE 16384
+#define BUFFER_SIZE 16384/2
 
 class Slider: public sf::Drawable{
 private:
@@ -54,8 +55,7 @@ private:
     sf::Vector2f position;
     sf::VertexArray vertexs;
 
-    const sf::SoundBuffer* buffer;
-    sf::Sound* sound;
+    mp3AudioStream* sound;
     
     std::vector<Complex> samples;
     CArray bin;
@@ -64,11 +64,11 @@ private:
     int sampleRate;
     int bufferSize;
 
-    std::vector<float> hammingWindow;
+    // std::vector<float> hammingWindow;
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 public:
-    FftSpectrum(sf::Vector2f position, sf::Vector2f size, sf::Sound &sound);
+    FftSpectrum(sf::Vector2f position, sf::Vector2f size, mp3AudioStream &sound);
     void Update();
 };
 

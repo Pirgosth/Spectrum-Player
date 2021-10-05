@@ -20,7 +20,7 @@ $(TARGET):
 	mkdir -p $(TARGET)
 
 $(OBJS): $(OBJDIR)/%.o: %.cpp
-	$(CC) -o $@ -c $<
+	$(CC) -g -o $@ -c $<
 
 $(OBJDIR):
 	mkdir -p $(OBJDIR)

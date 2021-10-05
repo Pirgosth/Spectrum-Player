@@ -78,7 +78,7 @@ int main(int argc, char* argv[]){
     Slider playerSlider(sf::Vector2f((1280-800)/2, (720-18)/2+220), sf::Vector2f(800, 18), sf::Color(255, 255, 255, 180), sf::Color(45, 245, 15), -3);
     playerSlider.SetScale(0, mp3Music.getDuration().asMilliseconds());
     // RawSpectrum rawSpectrum(sf::Vector2i((1280-1000)/2, 360-30), sf::Vector2i(1000, 0), sound, window);
-    // FftSpectrum fftSpectrum(sf::Vector2f((int)((1280-1000)/2), (int)((720)/2 + 50)), sf::Vector2f(1000, 400), sound);
+    FftSpectrum fftSpectrum(sf::Vector2f((int)((1280-1000)/2), (int)((720)/2 + 50)), sf::Vector2f(1000, 400), mp3Music);
 
     sf::Text songNameText(getFileName(path), font);
     songNameText.setPosition((window.getSize().x - songNameText.getGlobalBounds().width)/2 , 65);
@@ -98,13 +98,13 @@ int main(int argc, char* argv[]){
         playerSlider.SetValue(mp3Music.getPlayingOffset().asMilliseconds());
         songPlayingOffsetText.setString(getFormatedTime(mp3Music.getPlayingOffset().asSeconds()));
         // rawSpectrum.Update();
-        // fftSpectrum.Update();
+        fftSpectrum.Update();
 
         window.clear();
 
         window.draw(playerSlider);
         // window.draw(rawSpectrum);
-        // window.draw(fftSpectrum);
+        window.draw(fftSpectrum);
 
         window.draw(songDurationText);
         window.draw(songPlayingOffsetText);

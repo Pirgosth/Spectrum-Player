@@ -12,7 +12,7 @@
 #include "mp3AudioStream.hpp"
 #include "utils.h"
 
-#define BUFFER_SIZE 16384/2
+#define BUFFER_SIZE 16384
 
 class Slider: public sf::Drawable{
 private:

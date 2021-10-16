@@ -99,14 +99,14 @@ FftSpectrum::FftSpectrum(sf::Vector2f position, sf::Vector2f size, mp3AudioStrea
 
 void FftSpectrum::Update()
 {
-    BufferDescriptor currentBufferDescriptor = sound->getCurrentBufferDescriptor();
+    BufferDescriptor currentBufferDescriptor = sound->getSharedBufferDescriptor();
 
     sf::Int16 *buffer = currentBufferDescriptor.buffer;
     sampleCount = currentBufferDescriptor.bufferSize;
     bufferSize = BUFFER_SIZE < sampleCount ? BUFFER_SIZE : sampleCount;
     if (sampleCount <= 0 || buffer == nullptr)
     {
-        std::cout << "No samples in current buffer" << std::endl;
+        // std::cout << "No samples in current buffer" << std::endl;
         return;
     }
     samples.resize(bufferSize);
@@ -119,8 +119,7 @@ void FftSpectrum::Update()
     {
         samples[i] = Complex(buffer[i] * hammingWindow[i], 0);
     }
-    
-    delete[] buffer;
+
 
     bin = CArray(samples.data(), bufferSize);
     fft(bin);

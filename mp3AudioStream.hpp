@@ -7,7 +7,7 @@
 #include <mpg123.h>
 #include <algorithm>
 
-#define BUFFER_MULTIPLIER 4
+#define BUFFER_MULTIPLIER 8
 
 struct BufferDescriptor{
     sf::Int16* buffer = nullptr;
@@ -28,15 +28,17 @@ private:
     long totalSampleCount = 0;
     size_t maximumBufferSize = 0;
     BufferDescriptor bufferDescriptors[BUFFER_MULTIPLIER];
+    BufferDescriptor sharedBufferDescriptot;
     mpg123_handle *mh = nullptr;
     void reloadFirstBuffers();
     void shiftBuffers();
+    void updateSharedBuffer();
 public:
     mp3AudioStream(std::string filePath);
     virtual ~mp3AudioStream();
     void clearMemory();
     sf::Time getDuration();
-    BufferDescriptor getCurrentBufferDescriptor();
+    BufferDescriptor getSharedBufferDescriptor();
 };
 
 

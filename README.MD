@@ -17,4 +17,4 @@ You can run it in console without any args, it will ask you a `file path` pointi
 
 You can also run it directly without console interface by specifying `file path` as first argument
 
-Exemple: `./spectrum Toto-By-Africa.mp3`
+Exemple: `./spectrum Africa-By-Toto.mp3`

@@ -1,6 +1,6 @@
 CC=g++
 CFLAGS=-Wall -O
-LDFLAGS=-lsfml-audio -lsfml-graphics -lsfml-window -lsfml-system -lmpg123
+LDFLAGS=-lsfml-audio -lsfml-graphics -lsfml-window -lsfml-system -lmpg123 -lout123
 EXEC=spectrum
 OBJDIR=obj
 TARGET=target

@@ -5,7 +5,6 @@
 #include <string>
 #include <SFML/Audio.hpp>
 #include <mpg123.h>
-#include <algorithm>
 
 #define BUFFER_MULTIPLIER 8
 
@@ -28,7 +27,7 @@ private:
     long totalSampleCount = 0;
     size_t maximumBufferSize = 0;
     BufferDescriptor bufferDescriptors[BUFFER_MULTIPLIER];
-    BufferDescriptor sharedBufferDescriptot;
+    BufferDescriptor sharedBufferDescriptor;
     mpg123_handle *mh = nullptr;
     void reloadFirstBuffers();
     void shiftBuffers();

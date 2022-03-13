@@ -1,4 +1,5 @@
 #include "visuals.h"
+#include "mp3Handler.h"
 
 Slider::Slider(sf::Vector2f position, sf::Vector2f size, sf::Color outlineColor, sf::Color fillColor, float thickness)
 {
@@ -84,22 +85,22 @@ void RawSpectrum::draw(sf::RenderTarget &target, sf::RenderStates states) const
     target.draw(vertexs, states);
 }
 
-FftSpectrum::FftSpectrum(sf::Vector2f position, sf::Vector2f size, mp3AudioStream &sound) : d(exp(log(BUFFER_SIZE / 6) / size.x))
+FftSpectrum::FftSpectrum(sf::Vector2f position, sf::Vector2f size, Mp3Handler &handler) : d(exp(log(BUFFER_SIZE / 6) / size.x))
 {
     // std::cout << "Dilatation coefficient: " << d << std::endl;
     this->position = position;
     this->size = size;
 
-    this->sound = &sound;
+    this->handler = &handler;
 
     vertexs.setPrimitiveType(sf::Lines);
 
-    sampleRate = sound.getSampleRate();
+    sampleRate = handler.getSampleRate();
 }
 
 void FftSpectrum::Update()
 {
-    BufferDescriptor currentBufferDescriptor = sound->getSharedBufferDescriptor();
+    BufferDescriptor currentBufferDescriptor = handler->getSharedBufferDescriptor();
 
     sf::Int16 *buffer = currentBufferDescriptor.buffer;
     sampleCount = currentBufferDescriptor.bufferSize;
@@ -130,10 +131,10 @@ void FftSpectrum::Update()
     {
         sf::Vector2f samplePosition(log(i / 3) / log(bufferSize / 6.f) * size.x, std::min(size.y / 2, (float)std::abs(bin[(int)i]) / MAX_BARS * size.y));
         samplePosition.x += position.x;
-        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)(position.y - samplePosition.y)), sf::Color::White));
-        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)position.y), sf::Color::White));
-        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)position.y), sf::Color(255, 255, 255, 100)));
-        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)(position.y + samplePosition.y / 2)), sf::Color(255, 255, 255, 0)));
+        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)(position.y - samplePosition.y)), sf::Color(22, 166, 96)));
+        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)position.y), sf::Color(22, 166, 96)));
+        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)position.y), sf::Color(22, 166, 96, 100)));
+        vertexs.append(sf::Vertex(sf::Vector2f((int)(samplePosition.x), (int)(position.y + samplePosition.y / 2)), sf::Color(22, 166, 96, 0)));
     }
 }
 

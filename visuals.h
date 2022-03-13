@@ -9,7 +9,7 @@
 #include <math.h>
 #include <cstring>
 
-#include "mp3AudioStream.hpp"
+#include "mp3Handler.h"
 #include "utils.h"
 
 #define BUFFER_SIZE 16384
@@ -55,7 +55,7 @@ private:
     sf::Vector2f position;
     sf::VertexArray vertexs;
 
-    mp3AudioStream* sound;
+    Mp3Handler* handler;
     
     std::vector<Complex> samples;
     CArray bin;
@@ -68,7 +68,7 @@ private:
 
     virtual void draw(sf::RenderTarget& target, sf::RenderStates states) const;
 public:
-    FftSpectrum(sf::Vector2f position, sf::Vector2f size, mp3AudioStream &sound);
+    FftSpectrum(sf::Vector2f position, sf::Vector2f size, Mp3Handler &handler);
     void Update();
 };
 

@@ -46,7 +46,7 @@ void Mp3Handler::reloadFirstBuffers() {
     bufferDescriptors[i].bufferSize = 0;
     mpg123_read(mh, bufferDescriptors[i].buffer, buffer_size,
                 &bufferDescriptors[i].bufferSize);
-                
+
     bufferDescriptors[i].bufferSize /= sizeof(sf::Int16);
   }
 }
@@ -77,6 +77,19 @@ void Mp3Handler::updateSharedBuffer() {
     std::copy(bufferDescriptors[i].buffer,
               bufferDescriptors[i].buffer + bufferDescriptors[i].bufferSize,
               sharedBufferDescriptor.buffer + currentBufferOffset);
+  }
+}
+
+void playTest(out123_handle *ao, sf::Int16 *buffer, size_t bufferSize,
+              bool &playing) {
+
+  if (playing) {
+    size_t played = out123_play(ao, buffer, bufferSize * sizeof(sf::Int16));
+    if (played != bufferSize * sizeof(sf::Int16)) {
+      fprintf(stderr,
+              "Warning: written less than gotten from libmpg123: %li != %li\n",
+              (long)played, (long)bufferSize);
+    }
   }
 }
 
@@ -132,20 +145,22 @@ bool Mp3Handler::update() {
 
   if (!bufferDescriptors[0].bufferSize || playStatus != MPG123_OK)
     return false;
-  size_t played = out123_play(ao, bufferDescriptors[0].buffer,
-                            bufferDescriptors[0].bufferSize * sizeof(sf::Int16));
-  if (played != bufferDescriptors[0].bufferSize * sizeof(sf::Int16)) {
-    fprintf(stderr,
-            "Warning: written less than gotten from libmpg123: %li != %li\n",
-            (long)played, (long)bufferDescriptors[0].bufferSize);
+
+  for (int i = 0; i < BUFFER_MULTIPLIER; i++) {
+    if (bufferDescriptors[i].bufferSize * sizeof(sf::Int16) != buffer_size) {
+      // std::cout << "End of track" << std::endl;
+      stop();
+      return true;
+    }
   }
 
-  if (bufferDescriptors[0].bufferSize * sizeof(sf::Int16) != buffer_size) {
-    // std::cout << "End of track" << std::endl;
-    // mpg123_seek_frame(mh, 0, SEEK_SET);
-    stop();
-    return true;
-  }
+  // std::thread thread(playTest, ao, bufferDescriptors[0].buffer,
+  //                     bufferDescriptors[0].bufferSize, std::ref(isPlaying));
+
+  // thread.join();
+
+  playTest(ao, bufferDescriptors[0].buffer, bufferDescriptors[0].bufferSize,
+           isPlaying);
 
   mpg123_read(mh, bufferDescriptors[BUFFER_MULTIPLIER - 1].buffer, buffer_size,
               &bufferDescriptors[BUFFER_MULTIPLIER - 1].bufferSize);
@@ -178,6 +193,10 @@ int Mp3Handler::getSampleRate() { return data.sampleRate; }
 
 BufferDescriptor Mp3Handler::getSharedBufferDescriptor() {
   return sharedBufferDescriptor;
+}
+
+BufferDescriptor *Mp3Handler::getSharedBufferDescriptors() {
+  return bufferDescriptors;
 }
 
 void Mp3Handler::setPlayingOffset(sf::Time offset) {

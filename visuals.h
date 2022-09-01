@@ -55,6 +55,8 @@ private:
     sf::Vector2f position;
     sf::VertexArray vertexs;
 
+    std::vector<float> hammingWindow;
+
     Mp3Handler* handler;
     
     std::vector<Complex> samples;

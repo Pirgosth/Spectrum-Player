@@ -7,6 +7,7 @@
 #include <mpg123.h>
 #include <out123.h>
 #include <string>
+#include <thread>
 
 #define BUFFER_MULTIPLIER 8
 
@@ -53,6 +54,7 @@ public:
   void setPlayingOffset(sf::Time offset);
   int getSampleRate();
   BufferDescriptor getSharedBufferDescriptor();
+  BufferDescriptor *getSharedBufferDescriptors();
   ~Mp3Handler();
 };
 

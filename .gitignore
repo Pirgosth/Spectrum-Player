@@ -16,11 +16,14 @@ Spectrum
 *.exe
 *.mp3
 *.wav
+!Resources/*.wav
+!Resources/*.mp3
 *.zip
 *.bat
-*.py
 
 Temp Files
 
 obj
 target
+
+.venv

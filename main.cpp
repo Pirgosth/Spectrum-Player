@@ -1,7 +1,10 @@
+#define DEBUG
+
 #include <SFML/Audio.hpp>
 #include <SFML/Config.hpp>
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <sstream>
 #include <string>
 
 // #include "mp3AudioStream.hpp"
@@ -41,6 +44,17 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
+  #ifdef DEBUG
+
+  sf::Text fpsDisplay;
+  fpsDisplay.setFont(font);
+  fpsDisplay.setColor(sf::Color::White);
+  fpsDisplay.setPosition(10.F, 0.F);
+
+  sf::Clock clock;
+
+  #endif
+
   std::string path;
 
   if (argc >= 2) {
@@ -58,6 +72,7 @@ int main(int argc, char *argv[]) {
             << mp3Handler.getDuration().asSeconds() << " seconds" << std::endl;
 
   sf::RenderWindow window(sf::VideoMode(1280, 720), "Spectrum Player");
+  window.setVerticalSyncEnabled(true);
   sf::Event event;
 
   Slider playerSlider(sf::Vector2f((1280 - 800) / 2, (720 - 18) / 2 + 220),
@@ -97,6 +112,10 @@ int main(int argc, char *argv[]) {
   std::cout << sizeof(unsigned char) << std::endl;
 
   while (window.isOpen()) {
+    #ifdef DEBUG
+    float dTime = (float)clock.restart().asMicroseconds() / 1000.0f;
+    #endif
+
     while (window.pollEvent(event)) {
       pollEvents(event, window, mp3Handler);
     }
@@ -108,6 +127,17 @@ int main(int argc, char *argv[]) {
     mp3Handler.update();
     fftSpectrum.Update();
 
+    #ifdef DEBUG
+    auto fpsCount = 1000.0f / dTime;
+
+    std::ostringstream out;
+    out.precision(2);
+
+    out << std::fixed << fpsCount;
+
+    fpsDisplay.setString(std::move(out).str());
+    #endif
+
     window.clear();
     window.draw(playerSlider);
     // window.draw(rawSpectrum);
@@ -116,6 +146,9 @@ int main(int argc, char *argv[]) {
     window.draw(songDurationText);
     window.draw(songPlayingOffsetText);
     window.draw(songNameText);
+    #ifdef DEBUG
+    window.draw(fpsDisplay);
+    #endif
 
     window.display();
   }

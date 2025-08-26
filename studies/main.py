@@ -44,11 +44,11 @@ max_spectrum_frequency = 6000
 spectrum = [d + 0j for d in data[:sample_count]]
 fft(spectrum)
 
-max_frequency_component = round(max_spectrum_frequency / samplerate * sample_count)
+max_frequency_count = round(max_spectrum_frequency / samplerate * sample_count)
 
 time = [(1/samplerate) * i for i in range(sample_count)]
-frequency = [i * samplerate / sample_count for i in range(max_frequency_component)]
+frequency = [i * samplerate / sample_count for i in range(max_frequency_count)]
 
 # plt.plot(time, data[:sample_count])
-plt.plot(frequency, [abs(c) / abs(max([abs(c) for c in spectrum[:max_frequency_component]])) for c in spectrum[:max_frequency_component]])
+plt.plot(frequency, [abs(c) / abs(max([abs(c) for c in spectrum[:max_frequency_count]])) for c in spectrum[:max_frequency_count]])
 plt.show()
